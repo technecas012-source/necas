@@ -120,7 +120,7 @@ function addToCart(){if(!currentProduct)return;cart.push(currentProduct);localSt
 function renderCart(){const c=document.getElementById('cartItems');const cartCount=document.getElementById('cartCount');if(!cart.length){c.innerHTML='<p style="text-align:center;padding:60px;font-size:1.2rem">Your cart is empty</p>'}else{c.innerHTML=cart.map((item,index)=>`<div class="cart-item"><div><b>${item.title}</b><br>MK ${item.price.toLocaleString()}</div><button class="remove-btn" onclick="removeFromCart(${index})">Remove</button></div>`).join('');}cartCount.textContent=cart.length;}
 function removeFromCart(index){cart.splice(index,1);localStorage.setItem('necas_cart',JSON.stringify(cart));renderCart();}
 function clearCart(){if(confirm('Clear all items from cart?')){cart=[];localStorage.setItem('necas_cart','[]');renderCart();}}
-function sendWhatsAppOrder(){if(!cart.length){alert('Cart is empty');return;}let msg='*NECAS ORDER*%0A%0A';let total=0;cart.forEach((p,i)=>{msg+=`${i+1}. ${p.title} - MK ${p.price.toLocaleString()}%0A`;total+=p.price});msg+=`%0A*TOTAL: MK ${total.toLocaleString()}*%0A%0AThank you!`;window.open('https://wa.me/265994404000?text='+msg,'_blank');}
+function sendWhatsAppOrder(){if(!cart.length){alert('Cart is empty');return;}let msg='*NECAS ORDER*%0A%0A';let total=0;cart.forEach((p,i)=>{msg+=`${i+1}. ${p.title} - MK ${p.price.toLocaleString()}%0A`;total+=p.price});msg+=`%0A*TOTAL: MK ${total.toLocaleString()}*%0A%0AThank you!`;window.open('https://wa.me/265894404000?text='+msg,'_blank');}
 function showPage(page){document.querySelectorAll('.main').forEach(x=>x.classList.add('hidden'));document.getElementById(page).classList.remove('hidden');}
 function showLogin(){document.getElementById('loginModal').style.display='flex';}
 function login(){const email=document.getElementById('email').value;const pass=document.getElementById('pass').value;if(email==='admin@necas.com' && pass==='admin123'){closeModal();alert('Logged in as Admin!');isAdmin=true;document.getElementById('loginBtn').classList.add('hidden');document.getElementById('logoutBtn').classList.remove('hidden');showPage('admin');loadAdminProducts();}else{alert('Invalid credentials');}}
@@ -134,3 +134,4 @@ window.onclick=function(event){const modals=document.querySelectorAll('.modal');
 </script>
 </body>
 </html>
+
