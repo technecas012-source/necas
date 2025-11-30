@@ -56,7 +56,8 @@ input,textarea{width:100%;padding:12px;margin:8px 0;border:2px solid var(--gold)
 <nav id="navMenu">
 <div onclick="showPage('home')">Home</div>
 <div onclick="showPage('cart')">Cart <span class="badge" id="cartCount">0</span></div>
-<div onclick="showLogin()">Login</div>
+<div id="loginBtn" onclick="showLogin()">Login</div>
+<div id="logoutBtn" class="hidden" onclick="logout()">Logout</div>
 <div onclick="showPage('admin')">Admin</div>
 </nav>
 </div>
@@ -71,7 +72,7 @@ input,textarea{width:100%;padding:12px;margin:8px 0;border:2px solid var(--gold)
 <button class="btn" onclick="clearCart()" style="background:#ff4444;border-color:#ff4444">Clear Cart</button>
 </main><main class="main hidden" id="admin">
 <h1>Admin Panel</h1>
-<div style="margin-bottom:20px;max-width:500px;margin:0 auto 30px">
+<div id="adminControls" style="margin-bottom:20px;max-width:500px;margin:0 auto 30px">
 <input id="pName" placeholder="Product Name">
 <input id="pPrice" type="number" placeholder="Price">
 <textarea id="pDesc" placeholder="Description" rows="3"></textarea>
@@ -100,8 +101,9 @@ input,textarea{width:100%;padding:12px;margin:8px 0;border:2px solid var(--gold)
 </div><script>
 let cart = JSON.parse(localStorage.getItem('necas_cart')||'[]');
 let currentProduct = null;
+let isAdmin=false;
 
-// Generate 100 demo products with placeholder images
+// Generate 100 demo products
 let products = [];
 for(let i=1;i<=100;i++){
     let category = ["Perfume","Shirt","Shoes","Bag","Watch","Hat"][i%6];
@@ -114,7 +116,6 @@ for(let i=1;i<=100;i++){
     });
 }
 
-// Initialize
 window.onload = () => {
     renderProducts();
     renderCart();
@@ -219,12 +220,24 @@ function login(){
     const pass=document.getElementById('pass').value;
     if(email==='admin@necas.com' && pass==='admin123'){
         closeModal();
-        alert('Logged in!');
+        alert('Logged in as Admin!');
+        isAdmin=true;
+        document.getElementById('loginBtn').classList.add('hidden');
+        document.getElementById('logoutBtn').classList.remove('hidden');
         showPage('admin');
         loadAdminProducts();
     }else{
         alert('Invalid credentials');
     }
+}
+
+function logout(){
+    isAdmin=false;
+    document.getElementById('loginBtn').classList.remove('hidden');
+    document.getElementById('logoutBtn').classList.add('hidden');
+    document.getElementById('adminControls').style.display='none';
+    showPage('home');
+    alert('Logged out!');
 }
 
 function previewImage(event){
@@ -236,6 +249,7 @@ function previewImage(event){
 }
 
 function addProduct(){
+    if(!isAdmin){alert('Only admin can add products'); return;}
     const name = document.getElementById('pName').value.trim();
     const price = parseFloat(document.getElementById('pPrice').value);
     const desc = document.getElementById('pDesc').value.trim();
@@ -260,6 +274,7 @@ function addProduct(){
 function loadAdminProducts(){
     const list=document.getElementById('adminList');
     list.innerHTML='';
+    if(isAdmin) document.getElementById('adminControls').style.display='block';
     products.forEach(p=>{
         let div=document.createElement('div');
         div.className='card';
@@ -268,13 +283,14 @@ function loadAdminProducts(){
         <h3>${p.title}</h3>
         <div class="price">MK ${p.price.toLocaleString()}</div>
         <p style="padding:10px;font-size:0.9rem">${p.desc}</p>
-        <button class="remove-btn" onclick="deleteProduct(${p.id})">Delete</button>
+        ${isAdmin?`<button class="remove-btn" onclick="deleteProduct(${p.id})">Delete</button>`:''}
         `;
         list.appendChild(div);
     });
 }
 
 function deleteProduct(id){
+    if(!isAdmin){alert('Only admin can delete');return;}
     if(!confirm('Delete this product?')) return;
     products=products.filter(p=>p.id!==id);
     renderProducts();
