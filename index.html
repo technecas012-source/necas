@@ -11,15 +11,11 @@ header{background:var(--navy);color:white;padding:15px 0;position:fixed;width:10
 .container{max-width:1400px;margin:auto;padding:0 15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
 .logo{font-size:2rem;font-weight:bold;display:flex;align-items:center;gap:10px}
 .logo i{font-size:2.8rem;animation:pulse 3s infinite}
-nav{display:flex;align-items:center}
-nav ul{display:flex;gap:15px;list-style:none}
-nav ul li{padding:10px 16px;border-radius:8px;cursor:pointer;position:relative;white-space:nowrap}
-nav ul li:hover{background:rgba(255,255,255,.2)}
+nav{display:flex;gap:15px;align-items:center}
+nav div{color:white;padding:10px 16px;border-radius:8px;cursor:pointer;transition:.3s;position:relative}
+nav div:hover{background:rgba(255,255,255,.2)}
 .badge{position:absolute;top:-8px;right:-8px;background:var(--gold);color:var(--navy);width:22px;height:22px;border-radius:50%;font-size:0.9rem;display:flex;align-items:center;justify-content:center}
-.hamburger{display:none;flex-direction:column;cursor:pointer;gap:5px}
-.hamburger div{width:25px;height:3px;background:white}
-nav ul.responsive{flex-direction:column;position:absolute;top:60px;right:15px;background:var(--navy);width:200px;border-radius:8px;overflow:hidden;display:none}
-nav ul.responsive.show{display:flex}.main{margin-top:90px;padding:20px;flex:1}
+.main{margin-top:90px;padding:20px;flex:1}
 h1{text-align:center;color:var(--gold);font-size:2.6rem;margin:20px 0}
 .products{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:20px}
 .card{background:white;border:3px solid var(--gold);border-radius:16px;overflow:hidden;box-shadow:0 8px 25px rgba(0,0,0,.15);transition:.3s;cursor:pointer;text-align:center}
@@ -35,18 +31,25 @@ h1{text-align:center;color:var(--gold);font-size:2.6rem;margin:20px 0}
 #loader{position:fixed;inset:0;background:var(--navy);color:var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;font-size:3rem}
 #loader i{font-size:8rem;margin-bottom:20px;animation:pulse 2s infinite}
 .hidden{display:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
 #preview{margin:10px 0;max-width:100%;max-height:200px;border:2px solid var(--gold);border-radius:12px}
 input,textarea{width:100%;padding:12px;margin:8px 0;border:2px solid var(--gold);border-radius:8px;font-size:1rem}
 .cart-item{display:flex;justify-content:space-between;align-items:center;padding:15px;border-bottom:2px solid var(--gold);margin-bottom:10px}
 .remove-btn{background:#ff4444;color:white;border:none;padding:8px 15px;border-radius:5px;cursor:pointer}
 .error{color:red;text-align:center;padding:20px}
-.success{color:green;text-align:center;padding:20px}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.success{color:green;text-align:center;padding:20px}/* Responsive header with hamburger */
+.hamburger{display:none;flex-direction:column;cursor:pointer;gap:5px}
+.hamburger div{width:25px;height:3px;background:white}
+nav ul{display:flex;gap:15px;list-style:none}
+nav ul li{padding:10px 16px;border-radius:8px;cursor:pointer;position:relative}
+nav ul li:hover{background:rgba(255,255,255,.2)}
+nav ul li .badge{top:-8px;right:-8px}
+nav ul.responsive{flex-direction:column;position:absolute;top:60px;right:15px;background:var(--navy);width:200px;border-radius:8px;overflow:hidden;display:none}
+nav ul.responsive.show{display:flex}
+
 @media(max-width:768px){
 nav ul{display:none}
 .hamburger{display:flex}
-nav ul.responsive{width:100%;top:60px;right:0;border-radius:0}
-nav ul.responsive li{padding:12px 20px;font-size:1rem}
 }
 </style>
 
@@ -110,48 +113,163 @@ let products = [];
 let currentProduct = null;
 let isAdmin = false;
 
-function toggleMenu(){document.getElementById('navList').classList.toggle('show');}
+// Toggle hamburger menu
+function toggleMenu(){
+    document.getElementById('navList').classList.toggle('show');
+}
 
-window.onload = async ()=>{
-renderCart();
-await loadProducts();
-document.getElementById('loader').style.display='none';
+// Loader
+window.onload = () => {
+    setTimeout(()=>document.getElementById('loader').style.display='none',2000);
+    renderCart();
+    loadProducts();
 };
 
-async function loadProducts(){
-return new Promise(resolve=>{
-setTimeout(()=>{
-products=[];
-for(let i=1;i<=100;i++){
-products.push({id:i,title:'Product '+i,price:Math.floor(Math.random()*5000+500),desc:'Awesome product '+i,img:'https://via.placeholder.com/300x200?text='+i});
+// Load products (placeholder)
+function loadProducts(){
+    products = [
+        {id:1,title:'Product 1',price:1000,desc:'Awesome product',img:'https://via.placeholder.com/300x200?text=1'},
+        {id:2,title:'Product 2',price:1500,desc:'Awesome product',img:'https://via.placeholder.com/300x200?text=2'},
+        {id:3,title:'Product 3',price:2000,desc:'Awesome product',img:'https://via.placeholder.com/300x200?text=3'},
+        {id:4,title:'Product 4',price:2500,desc:'Awesome product',img:'https://via.placeholder.com/300x200?text=4'},
+        {id:5,title:'Product 5',price:3000,desc:'Awesome product',img:'https://via.placeholder.com/300x200?text=5'},
+        {id:6,title:'Product 6',price:3500,desc:'Awesome product',img:'https://via.placeholder.com/300x200?text=6'},
+        {id:7,title:'Product 7',price:4000,desc:'Awesome product',img:'https://via.placeholder.com/300x200?text=7'},
+        {id:8,title:'Product 8',price:4500,desc:'Awesome product',img:'https://via.placeholder.com/300x200?text=8'},
+        {id:9,title:'Product 9',price:5000,desc:'Awesome product',img:'https://via.placeholder.com/300x200?text=9'},
+        {id:10,title:'Product 10',price:5500,desc:'Awesome product',img:'https://via.placeholder.com/300x200?text=10'},
+        {id:11,title:'Product 11',price:6000,desc:'Awesome product',img:'https://via.placeholder.com/300x200?text=11'},
+        {id:12,title:'Product 12',price:6500,desc:'Awesome product',img:'https://via.placeholder.com/300x200?text=12'}
+    ];
+    renderProducts();
 }
-renderProducts();
-resolve();
-},50);
-});
+
+// Render products
+function renderProducts(){
+    const list = document.getElementById('productList');
+    list.innerHTML='';
+    products.forEach(p=>{
+        let div=document.createElement('div');
+        div.className='card';
+        div.innerHTML=`
+            <img src="${p.img}" alt="${p.title}">
+            <h3>${p.title}</h3>
+            <div class="price">MK ${p.price.toLocaleString()}</div>
+        `;
+        div.onclick=()=>openProduct(p);
+        list.appendChild(div);
+    });
 }
 
-function renderProducts(){const list=document.getElementById('productList');list.innerHTML='';products.forEach(p=>{let div=document.createElement('div');div.className='card';div.innerHTML=`<img src="${p.img}" alt="${p.title}"><h3>${p.title}</h3><div class="price">MK ${p.price.toLocaleString()}</div>`;div.onclick=()=>openProduct(p);list.appendChild(div);});}
+// Modals
+function openProduct(p){
+    currentProduct=p;
+    document.getElementById('mImg').src=p.img;
+    document.getElementById('mTitle').textContent=p.title;
+    document.getElementById('mPrice').textContent='MK '+p.price.toLocaleString();
+    document.getElementById('mDesc').textContent=p.desc;
+    document.getElementById('productModal').style.display='flex';
+}
+function closeModal(){
+    document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
+}
 
-function openProduct(p){currentProduct=p;document.getElementById('mImg').src=p.img;document.getElementById('mTitle').textContent=p.title;document.getElementById('mPrice').textContent='MK '+p.price.toLocaleString();document.getElementById('mDesc').textContent=p.desc;document.getElementById('productModal').style.display='flex';}
-function closeModal(){document.querySelectorAll('.modal').forEach(m=>m.style.display='none');}
-
-function addToCart(){if(!currentProduct)return;cart.push(currentProduct);localStorage.setItem('necas_cart',JSON.stringify(cart));renderCart();closeModal();alert('Added to cart!');}
-function renderCart(){const c=document.getElementById('cartItems');const cartCount=document.getElementById('cartCount');if(!cart.length)c.innerHTML='<p style="text-align:center;padding:60px;font-size:1.2rem">Your cart is empty</p>';else{c.innerHTML=cart.map((item,index)=>`<div class="cart-item"><div><b>${item.title}</b><br>MK ${item.price.toLocaleString()}</div><button class="remove-btn" onclick="removeFromCart(${index})">Remove</button></div>`).join('');}cartCount.textContent=cart.length;}
+// Cart
+function addToCart(){
+    if(!currentProduct) return;
+    cart.push(currentProduct);
+    localStorage.setItem('necas_cart',JSON.stringify(cart));
+    renderCart();
+    closeModal();
+    alert('Added to cart!');
+}
+function renderCart(){
+    const c=document.getElementById('cartItems');
+    const cartCount=document.getElementById('cartCount');
+    if(!cart.length)c.innerHTML='<p style="text-align:center;padding:60px;font-size:1.2rem">Your cart is empty</p>';
+    else{
+        c.innerHTML=cart.map((item,index)=>`
+        <div class="cart-item">
+            <div><b>${item.title}</b><br>MK ${item.price.toLocaleString()}</div>
+            <button class="remove-btn" onclick="removeFromCart(${index})">Remove</button>
+        </div>`).join('');
+    }
+    cartCount.textContent=cart.length;
+}
 function removeFromCart(i){cart.splice(i,1);localStorage.setItem('necas_cart',JSON.stringify(cart));renderCart();}
 function clearCart(){if(confirm('Clear all items?')){cart=[];localStorage.setItem('necas_cart','[]');renderCart();}}
 function sendWhatsAppOrder(){if(!cart.length){alert('Cart empty');return;}let msg='*NECAS ORDER*%0A%0A';let total=0;cart.forEach((p,i)=>{msg+=`${i+1}. ${p.title} - MK ${p.price.toLocaleString()}%0A`;total+=p.price;});msg+=`%0A*TOTAL: MK ${total.toLocaleString()}*%0A%0AThank you!`;window.open('https://wa.me/265994404000?text='+msg,'_blank');}
 
-function showPage(page){document.querySelectorAll('.main').forEach(x=>x.classList.add('hidden'));document.getElementById(page).classList.remove('hidden');if(page==='admin') loadAdminProducts();}
-function showLogin(){document.getElementById('loginModal').style.display='flex';}
-function login(){const email=document.getElementById('email').value;const pass=document.getElementById('pass').value;if(email==='admin@necas.com'&&pass==='admin123'){isAdmin=true;document.getElementById('loginBtn').classList.add('hidden');document.getElementById('adminBtn').classList.remove('hidden');document.getElementById('logoutBtn').classList.remove('hidden');closeModal();alert('Admin logged in!');showPage('admin');}else alert('Invalid credentials!');}
-function logout(){isAdmin=false;document.getElementById('loginBtn').classList.remove('hidden');document.getElementById('adminBtn').classList.add('hidden');document.getElementById('logoutBtn').classList.add('hidden');showPage('home');}
+// Pages
+function showPage(page){
+    document.querySelectorAll('.main').forEach(x=>x.classList.add('hidden'));
+    document.getElementById(page).classList.remove('hidden');
+    if(page==='admin') loadAdminProducts();
+}
 
+// Login
+function showLogin(){document.getElementById('loginModal').style.display='flex';}
+function login(){
+    const email=document.getElementById('email').value;
+    const pass=document.getElementById('pass').value;
+    if(email==='admin@necas.com' && pass==='admin123'){
+        isAdmin=true;
+        document.getElementById('loginBtn').classList.add('hidden');
+        document.getElementById('adminBtn').classList.remove('hidden');
+        document.getElementById('logoutBtn').classList.remove('hidden');
+        closeModal();
+        alert('Admin logged in!');
+        showPage('admin');
+    }else alert('Invalid credentials!');
+}
+function logout(){
+    isAdmin=false;
+    document.getElementById('loginBtn').classList.remove('hidden');
+    document.getElementById('adminBtn').classList.add('hidden');
+    document.getElementById('logoutBtn').classList.add('hidden');
+    showPage('home');
+}
+
+// Admin
 function previewImage(e){const f=e.target.files[0];if(f){document.getElementById('preview').src=URL.createObjectURL(f);document.getElementById('preview').classList.remove('hidden');}}
-function addProduct(){if(!isAdmin){alert('Only admin can add!');return;}const name=document.getElementById('pName').value.trim();const price=parseFloat(document.getElementById('pPrice').value);const desc=document.getElementById('pDesc').value.trim();if(!name||!price||price<=0){alert('Fill valid data');return;}const img='https://via.placeholder.com/500x300?text='+encodeURIComponent(name);const id=products.length?products[products.length-1].id+1:1;products.push({id,title:name,price,desc,img});renderProducts();loadAdminProducts();document.getElementById('pName').value='';document.getElementById('pPrice').value='';document.getElementById('pDesc').value='';document.getElementById('pImage').value='';document.getElementById('preview').classList.add('hidden');alert('Product added!');}
-function loadAdminProducts(){if(!isAdmin)return;const list=document.getElementById('adminList');list.innerHTML='';products.forEach(p=>{let div=document.createElement('div');div.className='card';div.innerHTML=`<img src="${p.img}" alt="${p.title}"><h3>${p.title}</h3><div class="price">MK ${p.price.toLocaleString()}</div><p style="padding:10px;font-size:0.9rem">${p.desc}</p><button class="remove-btn" onclick="deleteProduct(${p.id})">Delete</button>`;list.appendChild(div);});}
+function addProduct(){
+    if(!isAdmin){alert('Only admin can add!');return;}
+    const name=document.getElementById('pName').value.trim();
+    const price=parseFloat(document.getElementById('pPrice').value);
+    const desc=document.getElementById('pDesc').value.trim();
+    if(!name||!price||price<=0){alert('Fill valid data');return;}
+    const img='https://via.placeholder.com/500x300?text='+encodeURIComponent(name);
+    const id=products.length?products[products.length-1].id+1:1;
+    products.push({id,title:name,price,desc,img});
+    renderProducts();
+    loadAdminProducts();
+    document.getElementById('pName').value='';
+    document.getElementById('pPrice').value='';
+    document.getElementById('pDesc').value='';
+    document.getElementById('pImage').value='';
+    document.getElementById('preview').classList.add('hidden');
+    alert('Product added!');
+}
+function loadAdminProducts(){
+    if(!isAdmin)return;
+    const list=document.getElementById('adminList');
+    list.innerHTML='';
+    products.forEach(p=>{
+        let div=document.createElement('div');
+        div.className='card';
+        div.innerHTML=`
+            <img src="${p.img}" alt="${p.title}">
+            <h3>${p.title}</h3>
+            <div class="price">MK ${p.price.toLocaleString()}</div>
+            <p style="padding:10px;font-size:0.9rem">${p.desc}</p>
+            <button class="remove-btn" onclick="deleteProduct(${p.id})">Delete</button>
+        `;
+        list.appendChild(div);
+    });
+}
 function deleteProduct(id){if(!isAdmin){alert('Only admin!');return;}if(!confirm('Delete product?'))return;products=products.filter(p=>p.id!==id);renderProducts();loadAdminProducts();}
 
+// Close modal click outside
 window.onclick=function(e){document.querySelectorAll('.modal').forEach(m=>{if(e.target===m)m.style.display='none';});}
 </script></body>
 </html>
