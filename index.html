@@ -11,7 +11,8 @@ header{background:var(--navy);color:white;padding:15px 0;position:fixed;width:10
 .container{max-width:1400px;margin:auto;padding:0 15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
 .logo{font-size:2rem;font-weight:bold;display:flex;align-items:center;gap:10px}
 .logo i{font-size:2.8rem;animation:pulse 3s infinite}
-nav div{color:white;padding:10px 16px;border-radius:8px;cursor:pointer;transition:.3s}
+nav{display:flex;gap:15px;align-items:center}
+nav div{color:white;padding:10px 16px;border-radius:8px;cursor:pointer;transition:.3s;position:relative}
 nav div:hover{background:rgba(255,255,255,.2)}
 .badge{position:absolute;top:-8px;right:-8px;background:var(--gold);color:var(--navy);width:22px;height:22px;border-radius:50%;font-size:0.9rem;display:flex;align-items:center;justify-content:center}
 .main{margin-top:90px;padding:20px;flex:1}
@@ -22,7 +23,7 @@ h1{text-align:center;color:var(--gold);font-size:2.6rem;margin:20px 0}
 .card img{width:100%;height:190px;object-fit:cover;transition:0.3s;cursor:zoom-in}
 .card h3{margin:10px 0;font-size:1.2rem;font-weight:bold}
 .price{font-size:1.2rem;color:var(--gold);font-weight:bold}
-.btn{background:var(--navy);color:white;padding:14px 30px;border:3px solid var(--gold);border-radius:50px;cursor:pointer;margin:10px;display:inline-block;transition:.3s}
+.btn{background:var(--navy);color:white;padding:14px 30px;border:3px solid var(--gold);border-radius:50px;cursor:pointer;margin:10px;display:inline-block;transition:.3s;font-size:1rem}
 .btn:hover{background:var(--gold);color:var(--navy)}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;align-items:center;justify-content:center;padding:20px}
 .modal-content{background:white;border:5px solid var(--gold);border-radius:20px;max-width:600px;width:95%;padding:30px;text-align:center;position:relative}
@@ -31,8 +32,12 @@ h1{text-align:center;color:var(--gold);font-size:2.6rem;margin:20px 0}
 #loader i{font-size:8rem;margin-bottom:20px;animation:pulse 2s infinite}
 .hidden{display:none}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
-#preview{margin:10px 0;max-width:100%;height:auto;border:2px solid var(--gold);border-radius:12px}
-input,textarea{width:100%;padding:8px;margin:8px 0;border:2px solid var(--gold);border-radius:8px}
+#preview{margin:10px 0;max-width:100%;max-height:200px;border:2px solid var(--gold);border-radius:12px}
+input,textarea{width:100%;padding:12px;margin:8px 0;border:2px solid var(--gold);border-radius:8px;font-size:1rem}
+.cart-item{display:flex;justify-content:space-between;align-items:center;padding:15px;border-bottom:2px solid var(--gold);margin-bottom:10px}
+.remove-btn{background:#ff4444;color:white;border:none;padding:8px 15px;border-radius:5px;cursor:pointer}
+.error{color:red;text-align:center;padding:20px}
+.success{color:green;text-align:center;padding:20px}
 </style>
 </head>
 <body>
@@ -55,17 +60,18 @@ input,textarea{width:100%;padding:8px;margin:8px 0;border:2px solid var(--gold);
 <div id="cartItems"></div>
 <div id="totalAmount" style="margin:20px;font-weight:bold;font-size:1.2rem"></div>
 <button class="btn" onclick="sendWhatsAppOrder()">Send Order via WhatsApp</button>
+<button class="btn" onclick="clearCart()" style="background:#ff4444;border-color:#ff4444">Clear Cart</button>
 </main><main class="main hidden" id="admin">
 <h1>Admin Panel</h1>
-<div style="margin-bottom:20px">
+<div style="margin-bottom:20px;max-width:500px;margin:0 auto 30px">
 <input id="pName" placeholder="Product Name">
 <input id="pPrice" type="number" placeholder="Price">
-<textarea id="pDesc" placeholder="Description"></textarea>
+<textarea id="pDesc" placeholder="Description" rows="3"></textarea>
 <input type="file" id="pImage" accept="image/*" onchange="previewImage(event)">
 <img id="preview" src="" alt="Image Preview" class="hidden">
 <button class="btn" onclick="addProduct()">Add Product</button>
 </div>
-<div id="adminList"></div>
+<div class="products" id="adminList"></div>
 </main><div id="loginModal" class="modal">
 <div class="modal-content">
 <span class="close" onclick="closeModal()">&times;</span>
@@ -83,116 +89,193 @@ input,textarea{width:100%;padding:8px;margin:8px 0;border:2px solid var(--gold);
 <p id="mDesc"></p>
 <button class="btn" onclick="addToCart()">Add to Cart</button>
 </div>
-</div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
-// Supabase config
-const supabaseUrl = 'https://kjwhelyodlgocsnfxnon.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtqd2hlbHlvZGxnb2NzbmZ4bm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0NTAzODQsImV4cCI6MjA4MDAyNjM4NH0.ikVvyNjt_j3tG2v9EaknKVF1L2FzDlocdgY2YLQ6_qI';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+</div><script>
+// --- LOCALSTORAGE PERSISTENCE ---
+let products = JSON.parse(localStorage.getItem('necas_products')||'[]');
+if(!products.length){
+    for (let i=1;i<=12;i++){
+        products.push({
+            id:i,
+            title:'Product '+i,
+            price:Math.floor(Math.random()*5000)+1000,
+            desc:'This is product '+i+' description',
+            img:'https://via.placeholder.com/300x200/0f172a/d4af37?text=Product+'+i
+        });
+    }
+    localStorage.setItem('necas_products',JSON.stringify(products));
+}
 
+// CART
 let cart = JSON.parse(localStorage.getItem('necas_cart')||'[]');
 let currentProduct = null;
+let editingId = null;
 
-window.onload = async () => {
-document.getElementById('loader').style.display = 'none';
-await loadProducts();
-renderCart();
+// INIT
+window.onload = () => {
+    document.getElementById('loader').style.display='none';
+    renderProducts();
+    renderCart();
 };
 
-// --- PRODUCTS ---
-async function loadProducts() {
-const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-const list = document.getElementById('productList');
-list.innerHTML = '';
-if (data && data.length) {
-data.forEach(p => {
-let div = document.createElement('div');
-div.className = 'card';
-div.innerHTML = `<img src="${p.img}" alt="${p.title}"><h3>${p.title}</h3><div class="price">MK ${p.price.toLocaleString()}</div>`;
-div.onclick = () => openProduct(p);
-list.appendChild(div);
-});
-} else list.innerHTML = '<p style="text-align:center;color:var(--gold);font-size:1.8rem">No products yet</p>';
+// --- HELPER FUNCTIONS ---
+function saveProducts(){localStorage.setItem('necas_products',JSON.stringify(products));}
+function renderProducts(){
+    const list = document.getElementById('productList');
+    list.innerHTML='';
+    products.forEach(p=>{
+        const div=document.createElement('div');
+        div.className='card';
+        div.innerHTML=`
+            <img src="${p.img}" alt="${p.title}">
+            <h3>${p.title}</h3>
+            <div class="price">MK ${p.price.toLocaleString()}</div>
+        `;
+        div.onclick=()=>openProduct(p);
+        list.appendChild(div);
+    });
 }
 
-// --- MODALS ---
-function openProduct(p) {
-currentProduct = p;
-document.getElementById('mImg').src = p.img;
-document.getElementById('mTitle').textContent = p.title;
-document.getElementById('mPrice').textContent = 'MK ' + p.price.toLocaleString();
-document.getElementById('mDesc').textContent = p.desc || 'Premium quality';
-document.getElementById('productModal').style.display = 'flex';
+function openProduct(p){
+    currentProduct=p;
+    document.getElementById('mImg').src=p.img;
+    document.getElementById('mTitle').textContent=p.title;
+    document.getElementById('mPrice').textContent='MK '+p.price.toLocaleString();
+    document.getElementById('mDesc').textContent=p.desc;
+    document.getElementById('productModal').style.display='flex';
 }
 
-function closeModal() {
-document.querySelectorAll('.modal').forEach(m => m.style.display='none');
+function closeModal(){
+    document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
 }
 
-// --- CART ---
-function addToCart() {
-if (!currentProduct) return;
-cart.push(currentProduct);
-localStorage.setItem('necas_cart', JSON.stringify(cart));
-renderCart();
-closeModal();
+// --- CART FUNCTIONS ---
+function addToCart(){
+    if(!currentProduct)return;
+    cart.push(currentProduct);
+    localStorage.setItem('necas_cart',JSON.stringify(cart));
+    renderCart();
+    closeModal();
+    alert('Added to cart!');
 }
 
-function renderCart() {
-const c = document.getElementById('cartItems');
-if (!cart.length) c.innerHTML = '<p style="text-align:center;padding:60px">Cart empty</p>';
-else c.innerHTML = cart.map(p => `<div><b>${p.title}</b><br>MK ${p.price.toLocaleString()}</div>`).join('');
-document.getElementById('cartCount').textContent = cart.length;
-document.getElementById('totalAmount').textContent = 'Total: MK ' + cart.reduce((a,p)=>a+p.price,0).toLocaleString();
+function renderCart(){
+    const c=document.getElementById('cartItems');
+    const cartCount=document.getElementById('cartCount');
+    if(!cart.length)c.innerHTML='<p style="text-align:center;padding:60px;font-size:1.2rem">Your cart is empty</p>';
+    else{
+        c.innerHTML=cart.map((item,index)=>`
+            <div class="cart-item">
+                <div><b>${item.title}</b><br>MK ${item.price.toLocaleString()}</div>
+                <button class="remove-btn" onclick="removeFromCart(${index})">Remove</button>
+            </div>
+        `).join('');
+    }
+    cartCount.textContent=cart.length;
+    const total=cart.reduce((t,i)=>t+(i.price||0),0);
+    document.getElementById('totalAmount').textContent='Total: MK '+total.toLocaleString();
 }
 
-function sendWhatsAppOrder() {
-if (!cart.length) { alert('Cart empty'); return; }
-let msg = '*NECAS ORDER*%0A';
-let total = 0;
-cart.forEach(p => { msg += `• ${p.title} - MK ${p.price.toLocaleString()}%0A`; total += p.price; });
-msg += `%0A*TOTAL: MK ${total.toLocaleString()}*`;
-window.open('https://wa.me/265894404000?text=' + msg);
-cart = [];
-localStorage.setItem('necas_cart','[]');
-renderCart();
+function removeFromCart(index){cart.splice(index,1);localStorage.setItem('necas_cart',JSON.stringify(cart));renderCart();}
+function clearCart(){if(confirm('Clear all items from cart?')){cart=[];localStorage.setItem('necas_cart','[]');renderCart();}}
+function sendWhatsAppOrder(){
+    if(!cart.length){alert('Cart is empty');return;}
+    let msg='*NECAS ORDER*%0A%0A';
+    let total=0;
+    cart.forEach((p,i)=>{msg+=`${i+1}. ${p.title} - MK ${p.price.toLocaleString()}%0A`;total+=p.price;});
+    msg+=`%0A*TOTAL: MK ${total.toLocaleString()}*%0A%0AThank you for your order!`;
+    window.open('https://wa.me/265894404000?text='+msg,'_blank');
 }
-
-// --- PAGE NAV ---
-function showPage(p){document.querySelectorAll('.main').forEach(x=>x.classList.add('hidden'));document.getElementById(p).classList.remove('hidden');}
 
 // --- LOGIN ---
 function showLogin(){document.getElementById('loginModal').style.display='flex';}
-async function login() {
-const email = document.getElementById('email').value;
-const pass = document.getElementById('pass').value;
-const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
-if (error) alert(error.message);
-else { closeModal(); alert('Logged in!'); }
+function login(){
+    const email=document.getElementById('email').value;
+    const pass=document.getElementById('pass').value;
+    if(email==='admin@necas.com' && pass==='admin123'){
+        closeModal();
+        alert('Logged in successfully!');
+        showPage('admin');
+    }else alert('Invalid credentials');
 }
 
-// --- ADMIN ---
-function previewImage(event){document.getElementById('preview').src = URL.createObjectURL(event.target.files[0]);document.getElementById('preview').classList.remove('hidden');}
-
-async function addProduct() {
-const user = await supabase.auth.getUser();
-if (!user.data.user || user.data.user.email != 'admin@necas.com') { alert('Only admin'); return; }
-const name = document.getElementById('pName').value.trim();
-const price = parseInt(document.getElementById('pPrice').value);
-const desc = document.getElementById('pDesc').value;
-const file = document.getElementById('pImage').files[0];
-if (!name || !price || !file) { alert('Fill all fields + image'); return; }
-
-const { data: uploadData, error: uploadError } = await supabase.storage.from('products').upload(Date.now()+'.jpg', file);
-if (uploadError) { alert(uploadError.message); return; }
-const { data: urlData } = supabase.storage.from('products').getPublicUrl(uploadData.path);
-
-const { error: insertError } = await supabase.from('products').insert({ title: name, price, desc, img: urlData.publicUrl });
-if (insertError) { alert(insertError.message); return; }
-alert('Product added!');
-document.getElementById('pName').value = document.getElementById('pPrice').value = document.getElementById('pDesc').value = '';
-document.getElementById('pImage').value = '';
-document.getElementById('preview').classList.add('hidden');
-await loadProducts();
+// --- PAGE NAVIGATION ---
+function showPage(page){
+    document.querySelectorAll('.main').forEach(x=>x.classList.add('hidden'));
+    document.getElementById(page).classList.remove('hidden');
+    if(page==='admin') loadAdminProducts();
 }
+
+// --- ADMIN FUNCTIONS ---
+function previewImage(event){
+    const file=event.target.files[0];
+    if(file){document.getElementById('preview').src=URL.createObjectURL(file);document.getElementById('preview').classList.remove('hidden');}
+}
+
+function addProduct(){
+    const name=document.getElementById('pName').value.trim();
+    const price=parseFloat(document.getElementById('pPrice').value);
+    const desc=document.getElementById('pDesc').value.trim();
+    if(!name||!price||price<=0){alert('Please fill product name and valid price');return;}
+    if(editingId){
+        // Edit existing product
+        const prod=products.find(p=>p.id===editingId);
+        if(prod){
+            prod.title=name;
+            prod.price=price;
+            prod.desc=desc;
+            if(document.getElementById('pImage').files[0]) prod.img=URL.createObjectURL(document.getElementById('pImage').files[0]);
+            saveProducts();
+            editingId=null;
+            alert('Product updated successfully!');
+        }
+    } else {
+        // Add new product
+        const newProduct={id:Date.now(),title:name,price:price,desc:desc,img:'https://via.placeholder.com/300x200/0f172a/d4af37?text='+encodeURIComponent(name)};
+        products.unshift(newProduct);
+        saveProducts();
+        alert('Product added successfully!');
+    }
+    // Reset form
+    document.getElementById('pName').value='';document.getElementById('pPrice').value='';document.getElementById('pDesc').value='';
+    document.getElementById('pImage').value='';document.getElementById('preview').classList.add('hidden');
+    renderProducts();renderCart();loadAdminProducts();
+}
+
+function loadAdminProducts(){
+    const list=document.getElementById('adminList');
+    list.innerHTML='';
+    if(products.length){
+        products.forEach(p=>{
+            let div=document.createElement('div');
+            div.className='card';
+            div.innerHTML=`
+                <img src="${p.img}" alt="${p.title}">
+                <h3>${p.title}</h3>
+                <div class="price">MK ${p.price.toLocaleString()}</div>
+                <p style="padding:10px;font-size:0.9rem">${p.desc}</p>
+                <button class="btn" onclick="editProduct(${p.id})" style="background:#0f172a;color:white;border:3px solid var(--gold)">Edit</button>
+                <button class="remove-btn" onclick="deleteProduct(${p.id})">Delete</button>
+            `;
+            list.appendChild(div);
+        });
+    } else list.innerHTML='<p style="text-align:center;padding:40px;color:var(--gold);font-size:1.8rem">No products yet</p>';
+}
+
+function editProduct(id){
+    const prod=products.find(p=>p.id===id);
+    if(!prod) return;
+    editingId=id;
+    document.getElementById('pName').value=prod.title;
+    document.getElementById('pPrice').value=prod.price;
+    document.getElementById('pDesc').value=prod.desc;
+    document.getElementById('preview').src=prod.img;
+    document.getElementById('preview').classList.remove('hidden');
+    showPage('admin');
+}
+
+function deleteProduct(id){if(!confirm('Delete this product?')) return;products=products.filter(p=>p.id!==id);saveProducts();renderProducts();renderCart();loadAdminProducts();alert('Product deleted!');}
+
+// --- CLICK OUTSIDE MODALS ---
+window.onclick=function(e){document.querySelectorAll('.modal').forEach(m=>{if(e.target===m)m.style.display='none';});}
 </script></body>
 </html>
