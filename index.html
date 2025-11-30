@@ -1,5 +1,4 @@
-<!DOCTYPE html><html lang="en">
-<head>
+<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NECAS Online Store</title>
@@ -39,12 +38,12 @@ input,textarea{width:100%;padding:12px;margin:8px 0;border:2px solid var(--gold)
 .error{color:red;text-align:center;padding:20px}
 .success{color:green;text-align:center;padding:20px}
 /* Responsive nav */
+.menu-toggle{display:none;font-size:2rem;cursor:pointer;color:white}
 @media(max-width:768px){
   nav{flex-direction:column;align-items:flex-start;background:var(--navy);position:absolute;top:60px;left:-100%;width:100%;transition:.3s;border-bottom:5px solid var(--gold)}
   nav.active{left:0}
-  .menu-toggle{display:block;cursor:pointer;font-size:2rem;margin-right:15px}
+  .menu-toggle{display:block}
 }
-.menu-toggle{display:none}
 </style>
 </head>
 <body>
@@ -61,16 +60,19 @@ input,textarea{width:100%;padding:12px;margin:8px 0;border:2px solid var(--gold)
 <div onclick="showPage('admin')">Admin</div>
 </nav>
 </div>
-</header><main class="main" id="home">
+</header>
+<main class="main" id="home">
 <h1>NECAS Products</h1>
 <div class="products" id="productList"></div>
-</main><main class="main hidden" id="cart">
+</main>
+<main class="main hidden" id="cart">
 <h1>Cart</h1>
 <div id="cartItems"></div>
 <div id="totalAmount" style="margin:20px;font-weight:bold;font-size:1.2rem"></div>
 <button class="btn" onclick="sendWhatsAppOrder()">Send Order via WhatsApp</button>
 <button class="btn" onclick="clearCart()" style="background:#ff4444;border-color:#ff4444">Clear Cart</button>
-</main><main class="main hidden" id="admin">
+</main>
+<main class="main hidden" id="admin">
 <h1>Admin Panel</h1>
 <div id="adminControls" style="margin-bottom:20px;max-width:500px;margin:0 auto 30px">
 <input id="pName" placeholder="Product Name">
@@ -81,7 +83,8 @@ input,textarea{width:100%;padding:12px;margin:8px 0;border:2px solid var(--gold)
 <button class="btn" onclick="addProduct()">Add Product</button>
 </div>
 <div class="products" id="adminList"></div>
-</main><div id="loginModal" class="modal">
+</main>
+<div id="loginModal" class="modal">
 <div class="modal-content">
 <span class="close" onclick="closeModal()">&times;</span>
 <h2>Login</h2>
@@ -89,7 +92,8 @@ input,textarea{width:100%;padding:12px;margin:8px 0;border:2px solid var(--gold)
 <input id="pass" type="password" placeholder="Password">
 <button class="btn" onclick="login()">Login</button>
 </div>
-</div><div id="productModal" class="modal">
+</div>
+<div id="productModal" class="modal">
 <div class="modal-content">
 <span class="close" onclick="closeModal()">&times;</span>
 <img id="mImg" src="" alt="" style="width:100%;border-radius:12px;margin-bottom:15px">
@@ -98,216 +102,35 @@ input,textarea{width:100%;padding:12px;margin:8px 0;border:2px solid var(--gold)
 <p id="mDesc"></p>
 <button class="btn" onclick="addToCart()">Add to Cart</button>
 </div>
-</div><script>
+</div>
+<script>
 let cart = JSON.parse(localStorage.getItem('necas_cart')||'[]');
 let currentProduct = null;
 let isAdmin=false;
-
-// Generate 100 demo products
 let products = [];
 for(let i=1;i<=100;i++){
     let category = ["Perfume","Shirt","Shoes","Bag","Watch","Hat"][i%6];
-    products.push({
-        id: i,
-        title: `${category} ${i}`,
-        price: Math.floor(Math.random()*5000)+500,
-        desc: `High quality ${category.toLowerCase()} number ${i}`,
-        img: `https://picsum.photos/300/200?random=${i}`
-    });
+    products.push({id:i,title:`${category} ${i}`,price:Math.floor(Math.random()*5000)+500,desc:`High quality ${category.toLowerCase()} number ${i}`,img:`https://picsum.photos/300/200?random=${i}`});
 }
-
-window.onload = () => {
-    renderProducts();
-    renderCart();
-    document.getElementById('loader').style.display='none';
-}
-
-// --- Render products ---
-function renderProducts(){
-    const list = document.getElementById('productList');
-    list.innerHTML = '';
-    products.forEach(p=>{
-        let div = document.createElement('div');
-        div.className='card';
-        div.innerHTML = `
-        <img src="${p.img}" alt="${p.title}">
-        <h3>${p.title}</h3>
-        <div class="price">MK ${p.price.toLocaleString()}</div>
-        `;
-        div.onclick=()=>openProduct(p);
-        list.appendChild(div);
-    });
-}
-
-// --- Modals ---
-function openProduct(p){
-    currentProduct = p;
-    document.getElementById('mImg').src = p.img;
-    document.getElementById('mTitle').textContent = p.title;
-    document.getElementById('mPrice').textContent = 'MK '+p.price.toLocaleString();
-    document.getElementById('mDesc').textContent = p.desc;
-    document.getElementById('productModal').style.display='flex';
-}
-
-function closeModal(){
-    document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
-}
-
-// --- Cart ---
-function addToCart(){
-    if(!currentProduct) return;
-    cart.push(currentProduct);
-    localStorage.setItem('necas_cart',JSON.stringify(cart));
-    renderCart();
-    closeModal();
-}
-
-function renderCart(){
-    const c = document.getElementById('cartItems');
-    const cartCount = document.getElementById('cartCount');
-    if(!cart.length){
-        c.innerHTML='<p style="text-align:center;padding:60px;font-size:1.2rem">Your cart is empty</p>';
-    }else{
-        c.innerHTML = cart.map((item,index)=>`
-        <div class="cart-item">
-            <div><b>${item.title}</b><br>MK ${item.price.toLocaleString()}</div>
-            <button class="remove-btn" onclick="removeFromCart(${index})">Remove</button>
-        </div>
-        `).join('');
-    }
-    cartCount.textContent=cart.length;
-}
-
-function removeFromCart(index){
-    cart.splice(index,1);
-    localStorage.setItem('necas_cart',JSON.stringify(cart));
-    renderCart();
-}
-
-function clearCart(){
-    if(confirm('Clear all items from cart?')){
-        cart=[];
-        localStorage.setItem('necas_cart','[]');
-        renderCart();
-    }
-}
-
-function sendWhatsAppOrder(){
-    if(!cart.length){alert('Cart is empty');return;}
-    let msg='*NECAS ORDER*%0A%0A';
-    let total=0;
-    cart.forEach((p,i)=>{
-        msg+=`${i+1}. ${p.title} - MK ${p.price.toLocaleString()}%0A`;
-        total+=p.price;
-    });
-    msg+=`%0A*TOTAL: MK ${total.toLocaleString()}*%0A%0AThank you!`;
-    window.open('https://wa.me/265994404000?text='+msg,'_blank');
-}
-
-// --- Pages ---
-function showPage(page){
-    document.querySelectorAll('.main').forEach(x=>x.classList.add('hidden'));
-    document.getElementById(page).classList.remove('hidden');
-}
-
-// --- Admin ---
-function showLogin(){
-    document.getElementById('loginModal').style.display='flex';
-}
-
-function login(){
-    const email=document.getElementById('email').value;
-    const pass=document.getElementById('pass').value;
-    if(email==='admin@necas.com' && pass==='admin123'){
-        closeModal();
-        alert('Logged in as Admin!');
-        isAdmin=true;
-        document.getElementById('loginBtn').classList.add('hidden');
-        document.getElementById('logoutBtn').classList.remove('hidden');
-        showPage('admin');
-        loadAdminProducts();
-    }else{
-        alert('Invalid credentials');
-    }
-}
-
-function logout(){
-    isAdmin=false;
-    document.getElementById('loginBtn').classList.remove('hidden');
-    document.getElementById('logoutBtn').classList.add('hidden');
-    document.getElementById('adminControls').style.display='none';
-    showPage('home');
-    alert('Logged out!');
-}
-
-function previewImage(event){
-    const file = event.target.files[0];
-    if(file){
-        document.getElementById('preview').src = URL.createObjectURL(file);
-        document.getElementById('preview').classList.remove('hidden');
-    }
-}
-
-function addProduct(){
-    if(!isAdmin){alert('Only admin can add products'); return;}
-    const name = document.getElementById('pName').value.trim();
-    const price = parseFloat(document.getElementById('pPrice').value);
-    const desc = document.getElementById('pDesc').value.trim();
-    if(!name||!price){alert('Enter name and price');return;}
-    let newProduct={
-        id:products.length+1,
-        title:name,
-        price:price,
-        desc:desc||'Premium product',
-        img:document.getElementById('preview').src||`https://picsum.photos/300/200?random=${products.length+1}`
-    };
-    products.unshift(newProduct);
-    renderProducts();
-    loadAdminProducts();
-    document.getElementById('pName').value='';
-    document.getElementById('pPrice').value='';
-    document.getElementById('pDesc').value='';
-    document.getElementById('pImage').value='';
-    document.getElementById('preview').classList.add('hidden');
-}
-
-function loadAdminProducts(){
-    const list=document.getElementById('adminList');
-    list.innerHTML='';
-    if(isAdmin) document.getElementById('adminControls').style.display='block';
-    products.forEach(p=>{
-        let div=document.createElement('div');
-        div.className='card';
-        div.innerHTML=`
-        <img src="${p.img}" alt="${p.title}">
-        <h3>${p.title}</h3>
-        <div class="price">MK ${p.price.toLocaleString()}</div>
-        <p style="padding:10px;font-size:0.9rem">${p.desc}</p>
-        ${isAdmin?`<button class="remove-btn" onclick="deleteProduct(${p.id})">Delete</button>`:''}
-        `;
-        list.appendChild(div);
-    });
-}
-
-function deleteProduct(id){
-    if(!isAdmin){alert('Only admin can delete');return;}
-    if(!confirm('Delete this product?')) return;
-    products=products.filter(p=>p.id!==id);
-    renderProducts();
-    loadAdminProducts();
-}
-
-// --- Responsive nav ---
-function toggleMenu(){
-    document.getElementById('navMenu').classList.toggle('active');
-}
-
-// Close modals when clicking outside
-window.onclick=function(event){
-    const modals=document.querySelectorAll('.modal');
-    modals.forEach(m=>{
-        if(event.target===m){m.style.display='none';}
-    });
-}
-</script></body>
+window.onload = () => {renderProducts();renderCart();document.getElementById('loader').style.display='none';}
+function renderProducts(){const list=document.getElementById('productList');list.innerHTML='';products.forEach(p=>{let div=document.createElement('div');div.className='card';div.innerHTML=`<img src="${p.img}" alt="${p.title}"><h3>${p.title}</h3><div class="price">MK ${p.price.toLocaleString()}</div>`;div.onclick=()=>openProduct(p);list.appendChild(div);});}
+function openProduct(p){currentProduct=p;document.getElementById('mImg').src=p.img;document.getElementById('mTitle').textContent=p.title;document.getElementById('mPrice').textContent='MK '+p.price.toLocaleString();document.getElementById('mDesc').textContent=p.desc;document.getElementById('productModal').style.display='flex';}
+function closeModal(){document.querySelectorAll('.modal').forEach(m=>m.style.display='none');}
+function addToCart(){if(!currentProduct)return;cart.push(currentProduct);localStorage.setItem('necas_cart',JSON.stringify(cart));renderCart();closeModal();}
+function renderCart(){const c=document.getElementById('cartItems');const cartCount=document.getElementById('cartCount');if(!cart.length){c.innerHTML='<p style="text-align:center;padding:60px;font-size:1.2rem">Your cart is empty</p>'}else{c.innerHTML=cart.map((item,index)=>`<div class="cart-item"><div><b>${item.title}</b><br>MK ${item.price.toLocaleString()}</div><button class="remove-btn" onclick="removeFromCart(${index})">Remove</button></div>`).join('');}cartCount.textContent=cart.length;}
+function removeFromCart(index){cart.splice(index,1);localStorage.setItem('necas_cart',JSON.stringify(cart));renderCart();}
+function clearCart(){if(confirm('Clear all items from cart?')){cart=[];localStorage.setItem('necas_cart','[]');renderCart();}}
+function sendWhatsAppOrder(){if(!cart.length){alert('Cart is empty');return;}let msg='*NECAS ORDER*%0A%0A';let total=0;cart.forEach((p,i)=>{msg+=`${i+1}. ${p.title} - MK ${p.price.toLocaleString()}%0A`;total+=p.price});msg+=`%0A*TOTAL: MK ${total.toLocaleString()}*%0A%0AThank you!`;window.open('https://wa.me/265994404000?text='+msg,'_blank');}
+function showPage(page){document.querySelectorAll('.main').forEach(x=>x.classList.add('hidden'));document.getElementById(page).classList.remove('hidden');}
+function showLogin(){document.getElementById('loginModal').style.display='flex';}
+function login(){const email=document.getElementById('email').value;const pass=document.getElementById('pass').value;if(email==='admin@necas.com' && pass==='admin123'){closeModal();alert('Logged in as Admin!');isAdmin=true;document.getElementById('loginBtn').classList.add('hidden');document.getElementById('logoutBtn').classList.remove('hidden');showPage('admin');loadAdminProducts();}else{alert('Invalid credentials');}}
+function logout(){isAdmin=false;document.getElementById('loginBtn').classList.remove('hidden');document.getElementById('logoutBtn').classList.add('hidden');document.getElementById('adminControls').style.display='none';showPage('home');alert('Logged out!');}
+function previewImage(event){const file=event.target.files[0];if(file){document.getElementById('preview').src=URL.createObjectURL(file);document.getElementById('preview').classList.remove('hidden');}}
+function addProduct(){if(!isAdmin){alert('Only admin can add products');return;}const name=document.getElementById('pName').value.trim();const price=parseFloat(document.getElementById('pPrice').value);const desc=document.getElementById('pDesc').value.trim();if(!name||!price){alert('Enter name and price');return;}let newProduct={id:products.length+1,title:name,price:price,desc:desc||'Premium product',img:document.getElementById('preview').src||`https://picsum.photos/300/200?random=${products.length+1}`};products.unshift(newProduct);renderProducts();loadAdminProducts();document.getElementById('pName').value='';document.getElementById('pPrice').value='';document.getElementById('pDesc').value='';document.getElementById('pImage').value='';document.getElementById('preview').classList.add('hidden');}
+function loadAdminProducts(){const list=document.getElementById('adminList');list.innerHTML='';if(isAdmin) document.getElementById('adminControls').style.display='block';products.forEach(p=>{let div=document.createElement('div');div.className='card';div.innerHTML=`<img src="${p.img}" alt="${p.title}"><h3>${p.title}</h3><div class="price">MK ${p.price.toLocaleString()}</div><p style="padding:10px;font-size:0.9rem">${p.desc}</p>${isAdmin?`<button class="remove-btn" onclick="deleteProduct(${p.id})">Delete</button>`:''}`;list.appendChild(div);});}
+function deleteProduct(id){if(!isAdmin){alert('Only admin can delete');return;}if(!confirm('Delete this product?')) return;products=products.filter(p=>p.id!==id);renderProducts();loadAdminProducts();}
+function toggleMenu(){document.getElementById('navMenu').classList.toggle('active');}
+window.onclick=function(event){const modals=document.querySelectorAll('.modal');modals.forEach(m=>{if(event.target===m){m.style.display='none';}})}
+</script>
+</body>
 </html>
